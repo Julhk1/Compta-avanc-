@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Hero | Master Simulator</title>
+    <meta name="description" content="Simulateur expert de comptabilité et finance d'entreprise (PCG).">
+    <style>
+        :root { --bg-light: #f8fafc; --bg-card: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --accent-green: #0d9488; --border-color: #cbd5e1; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); color: var(--text-main); margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .home-card { max-width: 600px; width: 100%; background: var(--bg-card); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; }
+        h1 { color: var(--accent-green); margin-bottom: 5px; }
+        .subtitle { color: var(--text-muted); margin-bottom: 30px; font-size: 15px; }
+        .company-box { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 25px; }
+        .btn-choice { background: #fff; border: 2px solid var(--border-color); padding: 15px; border-radius: 8px; text-align: left; cursor: pointer; font-weight: bold; font-size: 15px; transition: all 0.2s; }
+        .btn-choice:hover { border-color: var(--accent-green); background: #f0fdf4; }
+        .btn-choice span { display: block; font-size: 12px; color: var(--text-muted); font-weight: normal; margin-top: 4px; }
+        .import-zone { border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 20px; }
+        input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; margin-bottom: 10px; }
+        .btn-sec { background: #f1f5f9; border: 1px solid var(--border-color); padding: 10px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="home-card">
+        <h1>💼 Financial Hero: Master Edition</h1>
+        <p class="subtitle">Choisissez une nature d'entreprise pour lancer l'exercice de 15 étapes (Ouverture à Clôture).</p>
+        
+        <div class="company-box">
+            <button onclick="startCompany('boulangerie')" class="btn-choice">🥖 1. L'Artisan Boulanger <span>Focus : Stocks physiques, Fiches de paie, Cessions d'actifs et provisions.</span></button>
+            <button onclick="startCompany('saas')" class="btn-choice">💻 2. L'Éditeur de Logiciels SaaS <span>Focus : Régularisations d'abonnements (Cut-off), Frais de R&D, Devises ($).</span></button>
+            <button onclick="startCompany('industrie')" class="btn-choice">🏭 3. Le Groupe Industriel <span>Focus : Double stock (Matières/Produits finis) et Consolidation de filiales.</span></button>
+        </div>
+
+        <div class="import-zone">
+            <input type="text" id="code-import" placeholder="Coller un code chiffré de sauvegarde...">
+            <button onclick="importSave()" class="btn-sec">🔄 Forcer l'importation manuelle</button>
+        </div>
+    </div>
+
+    <script>
+        function startCompany(type) {
+            localStorage.setItem('fh_current_company', type);
+            // On initialise une structure propre pour la boîte choisie
+            localStorage.removeItem('financial_hero_save'); // Reset de l'ancienne session volante
+            window.location.href = 'game.html';
+        }
+        function importSave() {
+            const code = document.getElementById('code-import').value.trim();
+            if (code) {
+                try {
+                    const decoded = JSON.parse(atob(code));
+                    localStorage.setItem('financial_hero_save', code);
+                    localStorage.setItem('fh_current_company', decoded.companyType || 'boulangerie');
+                    window.location.href = 'game.html';
+                } catch(e) { alert("Code corrompu."); }
+            }
+        }
+    </script>
+</body>
+</html>

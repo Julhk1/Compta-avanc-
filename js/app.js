@@ -43,22 +43,33 @@ function initGame() {
     if (localSave) {
         try {
             const parsed = JSON.parse(atob(localSave));
-            if (parsed.companyType === currentCompany) {
+            if (parsed && parsed.companyType) {
                 gameState = parsed;
+                currentCompany = parsed.companyType;
             }
-        } catch(e) { console.error("Erreur de restauration."); }
+        } catch(e) { 
+            console.error("Erreur de restauration, nettoyage de la sauvegarde.");
+            localStorage.removeItem('financial_hero_save');
+        }
     }
     renderUI();
 }
 
 function renderUI() {
+    // Sécurité si les scénarios ne sont pas encore chargés par le navigateur
+    if (typeof scenarios === 'undefined') {
+        console.warn("Base de données des scénarios introuvable.");
+        return;
+    }
+
     const pool = scenarios[currentCompany];
     const scenario = pool ? pool[gameState.step] : null;
 
     if (!scenario) {
         document.getElementById('mission-title').innerText = "Parcours Terminé !";
         document.getElementById('quest-title').innerText = "🏆 Expert Diplômé !";
-        document.getElementById('quest-description').innerHTML = `<p>Tu as validé les 15 étapes de cette nature d'entreprise. Ton expertise comptable sur cette filière est totale.</p><button onclick="resetGameTesting()" class="btn-main">Retourner au menu principal</button>`;
+        document.getElementById('quest-description').innerHTML = `<p>Tu as validé les 15 étapes de cette nature d'entreprise. Ton expertise comptable sur cette filière est totale.</p>
+        <button onclick="resetGameTesting()" class="btn-main" style="cursor: pointer; background-color: var(--accent-green); color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: bold;">Retourner au menu principal</button>`;
         document.getElementById('xp-bar').style.width = "100%";
         renderFinancials();
         return;
@@ -68,31 +79,36 @@ function renderUI() {
     document.getElementById('quest-title').innerText = scenario.title;
     document.getElementById('quest-description').innerHTML = scenario.description;
     document.getElementById('xp-display').innerText = gameState.xp;
-    document.getElementById('xp-bar').style.width = (gameState.step * 6.6) + "%"; // 15 étapes = ~6.6% par étape
+    document.getElementById('xp-bar').style.width = (gameState.step * 6.6) + "%";
 
     const select = document.getElementById('account-select');
-    select.innerHTML = '';
-    for (let code in scenario.accounts) {
-        select.innerHTML += `<option value="${code}">${scenario.accounts[code]}</option>`;
+    if (select) {
+        select.innerHTML = '';
+        for (let code in scenario.accounts) {
+            select.innerHTML += `<option value="${code}">${scenario.accounts[code]}</option>`;
+        }
     }
 
     const tbody = document.getElementById('journal-table-body');
-    tbody.innerHTML = '';
-    gameState.journal.forEach((item, index) => {
-        tbody.innerHTML += `<tr>
-            <td><strong>${item.account}</strong></td>
-            <td>${item.debit || '-'}</td>
-            <td>${item.credit || '-'}</td>
-            <td><button onclick="deleteLine(${index})" class="btn-danger">❌ Effacer</button></td>
-        </tr>`;
-    });
+    if (tbody) {
+        tbody.innerHTML = '';
+        gameState.journal.forEach((item, index) => {
+            tbody.innerHTML += `<tr>
+                <td><strong>${item.account}</strong></td>
+                <td>${item.debit || '-'}</td>
+                <td>${item.credit || '-'}</td>
+                <td><button onclick="deleteLine(${index})" class="btn-danger">❌ Effacer</button></td>
+            </tr>`;
+        });
+    }
 
     renderFinancials();
 }
 
 function handleFormSubmit() {
+    if (typeof scenarios === 'undefined') return;
     const pool = scenarios[currentCompany];
-    const scenario = pool[gameState.step];
+    const scenario = pool ? pool[gameState.step] : null;
     if (!scenario) return;
 
     const account = document.getElementById('account-select').value;
@@ -100,7 +116,6 @@ function handleFormSubmit() {
     const credit = parseFloat(document.getElementById('input-credit').value) || 0;
     const errorBox = document.getElementById('error-message');
 
-    // On ignore le blocage à 0 pour les étapes de fin d'inventaire ou d'impôt nul
     if (debit === 0 && credit === 0 && ! [14, 15].includes(gameState.step)) {
         return alert("Indique un montant.");
     }
@@ -133,8 +148,10 @@ function handleFormSubmit() {
 
 function showError(msg) {
     const errorBox = document.getElementById('error-message');
-    errorBox.style.display = 'block';
-    errorBox.innerText = msg;
+    if (errorBox) {
+        errorBox.style.display = 'block';
+        errorBox.innerText = msg;
+    }
 }
 
 function renderFinancials() {
@@ -142,6 +159,8 @@ function renderFinancials() {
     const passifList = document.getElementById('passif-list');
     const chargesList = document.getElementById('charges-list');
     const produitsList = document.getElementById('produits-list');
+    
+    if (!actifList || !passifList || !chargesList || !produitsList) return;
     
     actifList.innerHTML = ''; passifList.innerHTML = ''; chargesList.innerHTML = ''; produitsList.innerHTML = '';
     
@@ -198,8 +217,9 @@ function renderFinancials() {
     document.getElementById('total-produits').innerText = totalProduits;
     document.getElementById('resultat-net').innerText = resultatCourant;
 
+    if (typeof scenarios === 'undefined') return;
     const pool = scenarios[currentCompany];
-    const scenario = pool[gameState.step];
+    const scenario = pool ? pool[gameState.step] : null;
     if (!scenario) return;
     
     const linesRequired = Object.keys(scenario.expectedEntries).length;
@@ -231,8 +251,9 @@ function manualSaveAndExit() {
 }
 
 function skipStepTesting() {
+    if (typeof scenarios === 'undefined') return;
     const pool = scenarios[currentCompany];
-    const scenario = pool[gameState.step];
+    const scenario = pool ? pool[gameState.step] : null;
     if (!scenario) return;
     gameState.journal = [];
     for (let acc in scenario.expectedEntries) {
@@ -252,8 +273,10 @@ function previousStepTesting() {
     }
 }
 
+// CORRECTION CRUCIALE : Cette fonction nettoie la mémoire quoiqu'il arrive
 function resetGameTesting() {
     localStorage.removeItem('financial_hero_save');
+    localStorage.removeItem('fh_current_company');
     window.location.href = 'index.html';
 }
 

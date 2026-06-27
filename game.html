@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Hero - Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <div class="logo" onclick="window.location.href='index.html'">💼 Financial Hero</div>
+            <div id="mission-title" class="mission-subtitle">Chargement de la mission...</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button onclick="resetGameTesting()" class="btn-secondary" style="background-color: #ffe4e6; border-color: #fecdd3; color: #be123c; font-weight: bold; cursor: pointer;">🔄 Recommencer à zéro</button>
+
+            <button onclick="previousStepTesting()" class="btn-secondary" style="background-color: #e0f2fe; border-color: #7dd3fc; color: #0369a1; font-weight: bold; cursor: pointer;">== $0</button>
+            <button onclick="previousStepTesting()" class="btn-secondary" style="background-color: #e0f2fe; border-color: #7dd3fc; color: #0369a1; font-weight: bold; cursor: pointer;">⏪ Étape précédente (Test)</button>
+            <button onclick="skipStepTesting()" class="btn-secondary" style="background-color: #ffedd5; border-color: #fdba74; color: #c2410c; font-weight: bold; cursor: pointer;">⏩ Passer l'étape (Test)</button>
+            
+            <button onclick="manualSaveAndExit()" class="btn-secondary" style="cursor: pointer;">💾 Sauvegarder & Quitter</button>
+            
+            <div>
+                <div class="xp-text">Niveau Praticien : <span id="xp-display">0</span> XP</div>
+                <div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="grid">
+        <div class="panel-left">
+            <div class="card" id="quest-card">
+                <h2 id="quest-title">Objectif</h2>
+                <div id="quest-description">Description de la quête...</div>
+            </div>
+
+            <div class="card">
+                <h3>✍️ Passer une écriture au Journal</h3>
+                <div class="form-group">
+                    <label>Compte Comptable (PCG)</label>
+                    <select id="account-select"></select>
+                </div>
+                <div class="grid-2">
+                    <div>
+                        <label>Débit (€)</label>
+                        <input type="number" id="input-debit" value="0">
+                    </div>
+                    <div>
+                        <label>Crédit (€)</label>
+                        <input type="number" id="input-credit" value="0">
+                    </div>
+                </div>
+                <button onclick="handleFormSubmit()" class="btn-main" style="margin-top: 15px; cursor: pointer;">Enregistrer la ligne</button>
+            </div>
+
+            <div class="error-box" id="error-message"></div>
+
+            <div class="card">
+                <h3>📖 Livre-Journal du mois</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Compte</th>
+                            <th>Débit</th>
+                            <th>Crédit</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="journal-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel-right">
+            <div class="card">
+                <h2 style="color: var(--accent-green); border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">⚖️ LE BILAN (Situation Patrimoniale)</h2>
+                <div class="grid-2">
+                    <div>
+                        <h4 class="title-actif">ACTIF</h4>
+                        <div id="actif-list"></div>
+                        <hr style="border:0; border-top:1px solid var(--border-color); margin-top:10px;">
+                        <div class="financial-line">
+                            <span><strong>Total Actif :</strong></span>
+                            <span><strong id="total-actif">0</strong> €</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="title-passif">PASSIF</h4>
+                        <div id="passif-list"></div>
+                        <hr style="border:0; border-top:1px solid var(--border-color); margin-top:10px;">
+                        <div class="financial-line">
+                            <span><strong>Total Passif :</strong></span>
+                            <span><strong id="total-passif">0</strong> €</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="background-color: #f1f5f9;">
+                <h2 style="color: #0284c7; border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">📊 LE COMPTE DE RÉSULTAT (Activité)</h2>
+                <div class="grid-2">
+                    <div>
+                        <h4 style="color: var(--accent-red);">CHARGES (Dépenses)</h4>
+                        <div id="charges-list"></div>
+                        <hr style="border:0; border-top:1px solid var(--border-color); margin-top:10px;">
+                        <div class="financial-line">
+                            <span><strong>Total Charges :</strong></span>
+                            <span><strong id="total-charges">0</strong> €</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--accent-green);">PRODUITS (Ventes)</h4>
+                        <div id="produits-list"></div>
+                        <hr style="border:0; border-top:1px solid var(--border-color); margin-top:10px;">
+                        <div class="financial-line">
+                            <span><strong>Total Produits :</strong></span>
+                            <span><strong id="total-produits">0</strong> €</span>
+                        </div>
+                    </div>
+                </div>
+                <hr style="border:0; border-top: 2px solid var(--border-color); margin: 15px 0;">
+                <div class="financial-line" style="font-size: 16px; font-weight: bold;">
+                    <span>📈 Résultat Net de l'Exercice (Bénéfice/Perte) :</span>
+                    <span><span id="resultat-net">0</span> €</span>
+                </div>
+            </div>
+
+            <div class="card success-card" id="success-panel" style="display: none;">
+                <h3>🎉 Étape validée sans aucune erreur !</h3>
+                <p>Vos écritures sont comptablement et réglementairement parfaites.</p>
+                <div class="save-code-box" id="save-code-display" style="display: none;"></div>
+                <button onclick="goToNextStep()" class="btn-main" style="cursor: pointer;">Passer à l'Étape Suivante ➡️</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/scenarios.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
